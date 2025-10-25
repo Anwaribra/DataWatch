@@ -4,6 +4,8 @@ import time
 import logging
 import json
 import os
+from sqlalchemy import create_engine, text
+from dotenv import load_dotenv
 
 
 logging.basicConfig(level=logging.INFO)
@@ -13,6 +15,32 @@ def load_config():
     config_path = os.path.join(os.path.dirname(__file__), '..', 'config.json')
     with open(config_path, 'r') as f:
         return json.load(f)
+
+def get_db_connection():
+    load_dotenv()
+    
+    db_host = os.getenv('DB_HOST', 'localhost')
+    db_port = os.getenv('DB_PORT', '5432')
+    db_name = os.getenv('DB_NAME', 'eis_db')
+    db_user = os.getenv('DB_USER', 'postgres')
+    db_password = os.getenv('DB_PASSWORD')
+    
+    connection_string = f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
+    engine = create_engine(connection_string)
+    return engine
+
+
+def save_to_database(df):
+    engine = get_db_connection()
+    
+    df_to_save = df.copy()
+    df_to_save = df_to_save.reset_index()
+    df_to_save.columns = ['date', 'usd_egp_rate']
+    df_to_save['date'] = pd.to_datetime(df_to_save['date']).dt.date
+    
+    df_to_save.to_sql('usd_egp_rates', engine, if_exists='replace', index=False, method='multi')
+    
+    logger.info("data saved to database")
 
 config = load_config()
 API_KEY = config['alpha_vantage']['api_key']
@@ -27,7 +55,7 @@ def fetch_usd_egp_historical():
         "outputsize": "full"  
     }
 
-    logger.info("Fetching USD/EGP data from Alpha Vantage...")
+    logger.info("Fetching USD/EGP data from Alpha Vantage")
     response = requests.get(BASE_URL, params=params)
     data = response.json()
 
@@ -45,10 +73,13 @@ def fetch_usd_egp_historical():
 
     df.to_csv("data/raw/usd_egp.csv")
     logger.info("done fetching usd_egp")
-
     return df
 
-if __name__ == "__main__":
+def main():
     df = fetch_usd_egp_historical()
     if df is not None:
-        print(df.head())
+        save_to_database(df)
+        logger.info("fetching completed!")
+
+if __name__ == "__main__":
+    main()

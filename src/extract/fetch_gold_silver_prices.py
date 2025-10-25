@@ -6,6 +6,8 @@ import os
 from datetime import datetime, date, timedelta
 import time
 import yfinance as yf
+from sqlalchemy import create_engine, text
+from dotenv import load_dotenv
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -14,6 +16,30 @@ def load_config():
     config_path = os.path.join(os.path.dirname(__file__), '..', 'config.json')
     with open(config_path, 'r') as f:
         return json.load(f)
+
+def get_db_connection():
+    load_dotenv()
+    
+    db_host = os.getenv('DB_HOST', 'localhost')
+    db_port = os.getenv('DB_PORT', '5432')
+    db_name = os.getenv('DB_NAME', 'eis_db')
+    db_user = os.getenv('DB_USER', 'postgres')
+    db_password = os.getenv('DB_PASSWORD')
+    
+    connection_string = f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
+    engine = create_engine(connection_string)
+    return engine
+
+
+def save_to_database(df):
+    engine = get_db_connection()
+    
+    df_to_save = df.copy()
+    df_to_save['date'] = pd.to_datetime(df_to_save['date']).dt.date
+    
+    df_to_save.to_sql('gold_silver_prices', engine, if_exists='replace', index=False, method='multi')
+    
+    logger.info("data saved to database")
 
 def fetch_yahoo_finance_data():
     logger.info("fetching data from yahoo finance")
@@ -60,6 +86,7 @@ def save_prices_to_csv(df, filename):
 def main():
     historical_prices = fetch_gold_silver_prices_2025()
     save_prices_to_csv(historical_prices, 'gold_silver_prices.csv')
+    save_to_database(historical_prices)
     logger.info("fetching completed!")
 
 

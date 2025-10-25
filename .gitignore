@@ -15,6 +15,6 @@ profiles.yml
 dags/exchange_rate_dag.py
 dags/exchange_rate_dag 
 
-database/schema.sql 
+
 
 requirements.txt
