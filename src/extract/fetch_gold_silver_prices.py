@@ -47,7 +47,7 @@ def fetch_yahoo_finance_data():
     gold_ticker = yf.Ticker("GC=F")
     silver_ticker = yf.Ticker("SI=F")
     
-    start_date = "2025-01-01"
+    start_date = "2020-01-01"
     end_date = datetime.now().strftime("%Y-%m-%d")
     
     gold_data = gold_ticker.history(start=start_date, end=end_date)
