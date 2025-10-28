@@ -1,4 +1,4 @@
-# DataWatch – Data Quality Monitoring
+# Real Time EIS Pipeline
 
 A comprehensive data pipeline that collects, cleans, validates, and visualizes economic data for real-time monitoring of Egypt's financial health.
 
