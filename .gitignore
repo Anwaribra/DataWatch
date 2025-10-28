@@ -15,6 +15,13 @@ profiles.yml
 dags/exchange_rate_dag.py
 dags/exchange_rate_dag 
 
+dbt_packages/
 
 
 requirements.txt
+
+seeds/
+
+transform/datawatch/
+
+datawatch/
