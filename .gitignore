@@ -24,4 +24,19 @@ seeds/
 
 transform/datawatch/
 
-datawatch/
+schema.yml
+
+README_DATAWAREHOUSE.md
+seeds
+seeds/
+seeds/exchange_rates.csv
+seeds/metals_prices.csv
+seeds/economic_indicators.csv
+seeds/stock_indices.csv
+seed_output.log
+
+
+__pycache__
+_init_.pyc
+
+extract/__init__.py

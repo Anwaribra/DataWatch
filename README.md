@@ -1,67 +1,83 @@
 # Real Time EIS Pipeline
 
-A comprehensive data pipeline that collects, cleans, validates, and visualizes economic data for real-time monitoring of Egypt's financial health.
+<!-- A comprehensive data pipeline that collects, cleans, validates, and visualizes economic data for real-time monitoring of Egypt's financial health.  -->
 
-##  Overview
+## Overview
 
-The Economic Intelligence System monitors key economic  including:
-- **USD ↔ EGP exchange rates**
-- **Gold and silver prices**
-
-
-
-
-<!-- ## Features
-###  Real-time Data Pipeline
-- **Automated ETL**: Runs every 6 hours via Airflow
-- **Multiple Data Sources**: Exchange rates, gold prices, economic indicators, news
-- **Data Quality Monitoring**: Continuous validation with Soda Core
-- **Error Handling**: Robust retry mechanisms and alerting
-
-###  Comprehensive Dashboards
-- **Real-time Metrics**: Current exchange rates, gold prices, sentiment scores
-- **Historical Trends**: 30-day charts and trend analysis
-- **News Sentiment**: AI-powered sentiment analysis of economic news
-- **Data Quality Status**: Live monitoring of data freshness and completeness
-
-###  Data Quality & Monitoring
-- **Automated Validation**: Completeness, uniqueness, validity, consistency checks
-- **Performance Monitoring**: API response times, pipeline duration tracking
-- **Alert System**: Proactive notifications for data issues
-- **Comprehensive Logging**: Detailed logs for debugging and auditing -->
+The Economic Intelligence System (EIS) monitors and analyzes key economic indicators including:
+- **USD ↔ EGP exchange rates** (daily)
+- **Gold and silver prices** (daily, per troy ounce & per gram)
+- **Economic indicators** (annual): Inflation, GDP growth, Unemployment
+- **Stock market indices** (yearly): S&P 500, Dow Jones
 
 
-<!-- 
-##  Data Quality
 
-The system includes comprehensive data quality checks:
+## Data Warehouse ERD (Star Schema)
 
-- **Completeness**: Ensures required fields are populated
-- **Uniqueness**: Detects duplicate records
-- **Validity**: Validates data ranges and formats
-- **Consistency**: Checks data relationships
-- **Timeliness**: Monitors data freshness -->
+```mermaid
+erDiagram
+  DIM_DATE ||--o{ FACT_DAILY_METRICS : "has"
 
-<!-- Quality scores are calculated and alerts are sent when thresholds are breached.
+  DIM_DATE {
+    int date_id PK 
+    date date 
+    int year
+    int quarter
+    int month
+    int day
+    int day_of_week
+    boolean is_weekend
+    int week
+    string month_name
+    string day_name
+  }
 
-##  Monitoring & Alerts
+  FACT_DAILY_METRICS {
+    int date_id FK 
+    date date 
+    numeric gold_price_usd 
+    numeric silver_price_usd 
+    numeric usd_egp_rate 
+    numeric gold_price_egp 
+    numeric silver_price_egp 
+    numeric gold_price_usd_per_gram 
+    numeric silver_price_usd_per_gram 
+    numeric gold_price_egp_per_gram 
+    numeric silver_price_egp_per_gram 
+    numeric inflation_rate 
+    numeric gdp_growth_rate 
+    numeric unemployment_rate
+    numeric sp500
+  }
 
-### Automated Monitoring
-- **Data Freshness**: Alerts when data is older than 24 hours
-- **Data Quality**: Alerts when quality scores drop below 80%
-- **API Performance**: Alerts when response times exceed 30 seconds
-- **Pipeline Failures**: Alerts after 3 consecutive failures
+  STG_EXCHANGE_RATES ||..o{ FACT_DAILY_METRICS : "feeds"
+  STG_METALS_PRICES ||..o{ FACT_DAILY_METRICS : "feeds"
+  STG_ECONOMIC_INDICATORS ||..o{ FACT_DAILY_METRICS : "feeds"
+  STG_STOCK_INDICES ||..o{ FACT_DAILY_METRICS : "feeds"
 
-### Logging
-- **Structured Logging**: JSON-formatted logs for easy parsing
-- **Rotating Logs**: Automatic log rotation to prevent disk space issues
-- **Module-specific Logs**: Separate log files for each component -->
+  STG_EXCHANGE_RATES {
+    date date PK
+    numeric usd_egp_rate
+    string metric_type
+  }
 
-<!-- ##  Deployment
+  STG_METALS_PRICES {
+    date date PK
+    numeric gold_price_usd
+    numeric silver_price_usd
+    string source
+  }
 
-### Production Deployment
-1. **Database**: Set up PostgreSQL with proper backup strategy
-2. **Airflow**: Deploy on Kubernetes or Docker
-3. **Monitoring**: Set up external monitoring (e.g., Prometheus, Grafana)
-4. **Alerts**: Configure email/Slack notifications
- -->
+  STG_ECONOMIC_INDICATORS {
+    date date PK
+    numeric inflation_rate
+    numeric gdp_growth_rate
+    numeric unemployment_rate
+    string source
+  }
+
+  STG_STOCK_INDICES {
+    date date PK
+    numeric sp500
+  }
+```
