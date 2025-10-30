@@ -1,0 +1,136 @@
+# checks for fact_daily_metrics table
+
+
+
+checks for fact_daily_metrics:
+  - row_count > 0:
+      name: "fact_daily_metrics must have records"
+  - missing_count(date_id) = 0:
+      name: "date_id cannot be null"
+  - duplicate_count(date_id) = 0:
+      name: "date_id must be unique (primary key)"
+  - missing_count(date) = 0:
+      name: "date cannot be null"
+  
+
+
+
+  # Foreign key relationship check
+  - failed rows:
+      fail: when > 0
+      fail query: |
+        SELECT date_id 
+        FROM fact_daily_metrics f
+        WHERE NOT EXISTS (
+          SELECT 1 FROM dim_date d WHERE d.date_id = f.date_id
+        )
+      name: "All date_id values must exist in dim_date"
+  
+
+
+
+  # Referential integrity check
+  - row_count between 0 and 10000:
+      name: "Row count should be reasonable (adjust based on your data volume)"
+  
+
+
+  # Price data validity
+  - invalid_count(gold_price_usd) = 0:
+      name: "gold_price_usd must be numeric or null"
+  - min(gold_price_usd) >= 0:
+      name: "gold_price_usd cannot be negative"
+  
+  - invalid_count(silver_price_usd) = 0:
+      name: "silver_price_usd must be numeric or null"
+  - min(silver_price_usd) >= 0:
+      name: "silver_price_usd cannot be negative"
+  
+  # Exchange rate validity
+  - invalid_count(usd_egp_rate) = 0:
+      name: "usd_egp_rate must be numeric or null"
+  - min(usd_egp_rate) > 0:
+      name: "usd_egp_rate must be positive"
+  - min(usd_egp_rate) >= 10:
+      name: "usd_egp_rate should be >= 10"
+  - max(usd_egp_rate) <= 100:
+      name: "usd_egp_rate should be <= 100"
+  
+  # Calculated column consistency checks
+  - failed rows:
+      fail: when > 0
+      fail query: |
+        SELECT date_id, date, gold_price_usd, usd_egp_rate, gold_price_egp
+        FROM fact_daily_metrics
+        WHERE gold_price_usd IS NOT NULL 
+          AND usd_egp_rate IS NOT NULL
+          AND gold_price_egp IS NOT NULL
+          AND ABS(gold_price_egp - (gold_price_usd * usd_egp_rate)) > 0.01
+      name: "gold_price_egp must equal gold_price_usd * usd_egp_rate (within rounding)"
+  
+  - failed rows:
+      fail: when > 0
+      fail query: |
+        SELECT date_id, date, silver_price_usd, usd_egp_rate, silver_price_egp
+        FROM fact_daily_metrics
+        WHERE silver_price_usd IS NOT NULL 
+          AND usd_egp_rate IS NOT NULL
+          AND silver_price_egp IS NOT NULL
+          AND ABS(silver_price_egp - (silver_price_usd * usd_egp_rate)) > 0.01
+      name: "silver_price_egp must equal silver_price_usd * usd_egp_rate (within rounding)"
+  
+  # Gram conversion checks (1 troy ounce = 31.1035 grams)
+  - failed rows:
+      fail: when > 0
+      fail query: |
+        SELECT date_id, date, gold_price_usd, gold_price_usd_per_gram
+        FROM fact_daily_metrics
+        WHERE gold_price_usd IS NOT NULL
+          AND gold_price_usd_per_gram IS NOT NULL
+          AND ABS(gold_price_usd_per_gram - (gold_price_usd / 31.1035)) > 0.01
+      name: "gold_price_usd_per_gram must equal gold_price_usd / 31.1035 (within rounding)"
+  
+  # Economic indicators validity
+  - min(inflation_rate) >= -10:
+      name: "inflation_rate should be >= -10%"
+  - max(inflation_rate) <= 100:
+      name: "inflation_rate should be <= 100%"
+  
+  - min(gdp_growth_rate) >= -20:
+      name: "gdp_growth_rate should be >= -20%"
+  - max(gdp_growth_rate) <= 50:
+      name: "gdp_growth_rate should be <= 50%"
+  
+  - min(unemployment_rate) >= 0:
+      name: "unemployment_rate should be >= 0%"
+  - max(unemployment_rate) <= 100:
+      name: "unemployment_rate should be <= 100%"
+  
+  # Stock index validity
+  - invalid_count(sp500) = 0:
+      name: "sp500 must be numeric or null"
+  - min(sp500) > 0:
+      name: "sp500 must be positive"
+  - min(sp500) >= 1000:
+      name: "sp500 should be >= 1000"
+  - max(sp500) <= 10000:
+      name: "sp500 should be <= 10000"
+  
+  # Data completeness checks
+  - missing_percent(gold_price_usd) < 50:
+      name: "At least 50% of records should have gold_price_usd"
+  - missing_percent(silver_price_usd) < 50:
+      name: "At least 50% of records should have silver_price_usd"
+  - missing_percent(usd_egp_rate) < 20:
+      name: "At least 80% of records should have usd_egp_rate"
+  
+#   # At least one price metric should exist
+#   - failed rows:
+#       fail: when > 0
+#       fail query: |
+#         SELECT date_id, date
+#         FROM fact_daily_metrics
+#         WHERE gold_price_usd IS NULL 
+#           AND silver_price_usd IS NULL
+#       name: "Each row should have at least one price metric (gold or silver)"
+

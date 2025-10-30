@@ -1,0 +1,51 @@
+# Dimension Table Quality Checks
+
+
+checks for dim_date:
+  # primary key integrity
+  - row_count > 0:
+      name: "dim_date must have records"
+  - missing_count(date_id) = 0:
+      name: "date_id cannot be null"
+  - duplicate_count(date_id) = 0:
+      name: "date_id must be unique"
+  - missing_count(date) = 0:
+      name: "date cannot be null"
+  - duplicate_count(date) = 0:
+      name: "date must be unique"
+  
+  # checks for date_id (YYYYMMDD format)
+  - min(date_id) >= 20140101:
+      name: "date_id must be >= 20140101"
+  - max(date_id) <= 20500101:
+      name: "date_id must be <= 20500101"
+  
+  # Temporal attribute validation
+  - min(year) >= 2014:
+      name: "year must be >= 2014"
+  - max(year) <= 2050:
+      name: "year must be <= 2050"
+  - min(month) = 1:
+      name: "month must be >= 1"
+  - max(month) = 12:
+      name: "month must be <= 12"
+  - min(day) = 1:
+      name: "day must be >= 1"
+  - max(day) = 31:
+      name: "day must be <= 31"
+  - min(quarter) = 1:
+      name: "quarter must be >= 1"
+  - max(quarter) = 4:
+      name: "quarter must be <= 4"
+  - min(day_of_week) = 0:
+      name: "day_of_week must be >= 0"
+  - max(day_of_week) = 6:
+      name: "day_of_week must be <= 6"
+  
+  # Data completeness
+  - missing_count(year) = 0:
+      name: "year cannot be null"
+  - missing_count(month) = 0:
+      name: "month cannot be null"
+  - missing_count(day) = 0:
+      name: "day cannot be null"

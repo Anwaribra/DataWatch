@@ -1,7 +1,7 @@
 data/
 logs/
 target/
-dags/
+
 .env
 
 .env
@@ -12,8 +12,7 @@ __pycache__/
 logs/
 profiles.yml
 
-dags/exchange_rate_dag.py
-dags/exchange_rate_dag 
+
 
 dbt_packages/
 
@@ -40,3 +39,11 @@ __pycache__
 _init_.pyc
 
 extract/__init__.py
+
+
+checks_dim_date.yml.old 
+checks_dim_date.yml.old2 
+
+checks.yml 
+configuration.yml
+quality/README.md

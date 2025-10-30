@@ -1,0 +1,171 @@
+# checks for all staging layer tables
+
+checks for stg_exchange_rates:
+  - row_count > 0:
+      name: "stg_exchange_rates must have records"
+  - missing_count(date) = 0:
+      name: "date cannot be null"
+  - duplicate_count(date) = 0:
+      name: "date must be unique"
+  - missing_count(usd_egp_rate) = 0:
+      name: "usd_egp_rate cannot be null"
+  - min(usd_egp_rate) > 0:
+      name: "usd_egp_rate must be positive"
+  - min(usd_egp_rate) >= 10:
+      name: "usd_egp_rate should be >= 10"
+  - max(usd_egp_rate) <= 100:
+      name: "usd_egp_rate should be <= 100"
+  - failed rows:
+      fail: when > 0
+      fail query: |
+        SELECT date
+        FROM stg_exchange_rates
+        WHERE date < DATE '2014-01-01'
+      name: "date should be after 2014-01-01"
+  
+
+  
+  # freshness check
+  - failed rows:
+      fail: when > 0
+      fail query: |
+        SELECT date, usd_egp_rate
+        FROM stg_exchange_rates
+        WHERE date < CURRENT_DATE - INTERVAL '30 days'
+          AND date = (SELECT MAX(date) FROM stg_exchange_rates)
+      name: "Most recent data should be within last 30 days"
+
+checks for stg_metals_prices:
+  - row_count > 0:
+      name: "stg_metals_prices must have records"
+  - missing_count(date) = 0:
+      name: "date cannot be null"
+  - duplicate_count(date) = 0:
+      name: "date must be unique"
+  
+
+
+  # check if contain at least one price should exist
+  - failed rows:
+      fail: when > 0
+      fail query: |
+        SELECT date
+        FROM stg_metals_prices
+        WHERE gold_price_usd IS NULL 
+          AND silver_price_usd IS NULL
+      name: "Each row should have at least one price (gold or silver)"
+  
+
+
+
+  # Price validity
+  - min(gold_price_usd) >= 0:
+      name: "gold_price_usd cannot be negative"
+  - min(gold_price_usd) >= 500:
+      name: "gold_price_usd should be >= 500"
+  - max(gold_price_usd) <= 5000:
+      name: "gold_price_usd should be <= 5000"
+  
+  - min(silver_price_usd) >= 0:
+      name: "silver_price_usd cannot be negative"
+  - min(silver_price_usd) >= 10:
+      name: "silver_price_usd should be >= 10"
+  - max(silver_price_usd) <= 100:
+      name: "silver_price_usd should be <= 100"
+  
+  - failed rows:
+      fail: when > 0
+      fail query: |
+        SELECT date
+        FROM stg_metals_prices
+        WHERE date < DATE '2014-01-01'
+      name: "date should be after 2014-01-01"
+  - missing_count(source) = 0:
+      name: "source cannot be null"
+
+checks for stg_economic_indicators:
+  - row_count > 0:
+      name: "stg_economic_indicators must have records"
+  - missing_count(date) = 0:
+      name: "date cannot be null"
+  - duplicate_count(date) = 0:
+      name: "date must be unique"
+  
+
+
+
+
+  # check economic indicator ranges
+  - min(inflation_rate) >= -10:
+      name: "inflation_rate should be >= -10%"
+  - max(inflation_rate) <= 100:
+      name: "inflation_rate should be <= 100%"
+  
+  - min(gdp_growth_rate) >= -20:
+      name: "gdp_growth_rate should be >= -20%"
+  - max(gdp_growth_rate) <= 50:
+      name: "gdp_growth_rate should be <= 50%"
+  
+  - min(unemployment_rate) >= 0:
+      name: "unemployment_rate should be >= 0%"
+  - max(unemployment_rate) <= 100:
+      name: "unemployment_rate should be <= 100%"
+  
+  - failed rows:
+      fail: when > 0
+      fail query: |
+        SELECT date
+        FROM stg_economic_indicators
+        WHERE date < DATE '2014-01-01'
+      name: "date should be after 2014-01-01"
+  - missing_count(source) = 0:
+      name: "source cannot be null"
+  
+
+
+
+  # check if annual data should have year-end dates
+  - failed rows:
+      fail: when > 0
+      fail query: |
+        SELECT date, EXTRACT(month FROM date) as month, EXTRACT(day FROM date) as day
+        FROM stg_economic_indicators
+        WHERE NOT (EXTRACT(month FROM date) = 12 AND EXTRACT(day FROM date) = 31)
+      name: "Economic indicators should typically be year-end dates (12-31)"
+
+checks for stg_stock_indices:
+  - row_count > 0:
+      name: "stg_stock_indices must have records"
+  - missing_count(date) = 0:
+      name: "date cannot be null"
+  - duplicate_count(date) = 0:
+      name: "date must be unique"
+  - missing_count(sp500) = 0:
+      name: "sp500 cannot be null"
+  
+  - min(sp500) > 0:
+      name: "sp500 must be positive"
+  - min(sp500) >= 1000:
+      name: "sp500 should be >= 1000"
+  - max(sp500) <= 10000:
+      name: "sp500 should be <= 10000"
+  - failed rows:
+      fail: when > 0
+      fail query: |
+        SELECT date
+        FROM stg_stock_indices
+        WHERE date < DATE '2014-01-01'
+      name: "date should be after 2014-01-01"
+  
+
+
+  # freshness check
+  - failed rows:
+      fail: when > 0
+      fail query: |
+        SELECT date, sp500
+        FROM stg_stock_indices
+        WHERE date < CURRENT_DATE - INTERVAL '30 days'
+          AND date = (SELECT MAX(date) FROM stg_stock_indices)
+      name: "Most recent stock data should be within last 30 days"
+
