@@ -5,7 +5,6 @@ import json
 import os
 import time
 from datetime import datetime
-from sqlalchemy import create_engine
 from dotenv import load_dotenv
 
 logging.basicConfig(level=logging.INFO)
@@ -28,7 +27,7 @@ def load_config():
     with open(config_path, 'r') as f:
         return json.load(f)
 
-def get_db_connection():
+def get_db_connection_string():
     load_dotenv()
     db_host = os.getenv('DB_HOST', 'localhost')
     db_port = os.getenv('DB_PORT', '5432')
@@ -36,7 +35,7 @@ def get_db_connection():
     db_user = os.getenv('DB_USER', 'postgres')
     db_password = os.getenv('DB_PASSWORD')
     connection_string = f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
-    return create_engine(connection_string)
+    return connection_string
 
 def fetch_stock_index(ticker, name):
     if not YFINANCE_AVAILABLE:
@@ -78,8 +77,8 @@ def save_data(df):
     os.makedirs('data/raw', exist_ok=True)
     df.to_csv('data/raw/stock_indices.csv', index=False)
     logger.info(f"Saved {len(df)} records to CSV")
-    engine = get_db_connection()
-    df.to_sql('stock_indices', engine, if_exists='replace', index=False, method='multi')
+    connection_string = get_db_connection_string()
+    df.to_sql('stock_indices', connection_string, if_exists='replace', index=False)
     logger.info("Data saved to PostgreSQL")
 
 def main():

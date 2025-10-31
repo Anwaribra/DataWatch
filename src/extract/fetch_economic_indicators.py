@@ -4,7 +4,6 @@ import logging
 import json
 import os
 from datetime import datetime
-from sqlalchemy import create_engine
 from dotenv import load_dotenv
 
 logging.basicConfig(level=logging.INFO)
@@ -15,7 +14,7 @@ def load_config():
     with open(config_path, 'r') as f:
         return json.load(f)
 
-def get_db_connection():
+def get_db_connection_string():
     load_dotenv()
     db_host = os.getenv('DB_HOST', 'localhost')
     db_port = os.getenv('DB_PORT', '5432')
@@ -23,7 +22,7 @@ def get_db_connection():
     db_user = os.getenv('DB_USER', 'postgres')
     db_password = os.getenv('DB_PASSWORD')
     connection_string = f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
-    return create_engine(connection_string)
+    return connection_string
 
 def fetch_indicator(code, name):
     try:
@@ -78,8 +77,8 @@ def save_data(df):
     df.to_csv('data/raw/economic_indicators.csv', index=False)
     logger.info(f"Saved {len(df)} records to CSV")
     
-    engine = get_db_connection()
-    df.to_sql('economic_indicators', engine, if_exists='replace', index=False, method='multi')
+    connection_string = get_db_connection_string()
+    df.to_sql('economic_indicators', connection_string, if_exists='replace', index=False)
     logger.info("data saved to postgres")
 
 def main():

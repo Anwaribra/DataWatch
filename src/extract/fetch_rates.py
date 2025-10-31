@@ -4,7 +4,6 @@ import time
 import logging
 import json
 import os
-from sqlalchemy import create_engine, text
 from dotenv import load_dotenv
 
 
@@ -16,7 +15,7 @@ def load_config():
     with open(config_path, 'r') as f:
         return json.load(f)
 
-def get_db_connection():
+def get_db_connection_string():
     load_dotenv()
     
     db_host = os.getenv('DB_HOST', 'localhost')
@@ -26,19 +25,19 @@ def get_db_connection():
     db_password = os.getenv('DB_PASSWORD')
     
     connection_string = f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
-    engine = create_engine(connection_string)
-    return engine
+    return connection_string
 
 
 def save_to_database(df):
-    engine = get_db_connection()
+    connection_string = get_db_connection_string()
     
     df_to_save = df.copy()
     df_to_save = df_to_save.reset_index()
     df_to_save.columns = ['date', 'usd_egp_rate']
     df_to_save['date'] = pd.to_datetime(df_to_save['date']).dt.date
     
-    df_to_save.to_sql('usd_egp_rates', engine, if_exists='replace', index=False, method='multi')
+    # Use connection string directly for pandas compatibility
+    df_to_save.to_sql('usd_egp_rates', connection_string, if_exists='replace', index=False)
     
     logger.info("data saved to database")
 
