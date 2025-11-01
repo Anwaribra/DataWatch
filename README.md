@@ -1,38 +1,49 @@
 # Real Time EIS Pipeline
 
-<!-- A comprehensive data pipeline that collects, cleans, validates, and visualizes economic data for real-time monitoring of Egypt's financial health.  -->
+A comprehensive data pipeline that collects, transforms, validates, and analyzes Egypt's economic indicators in real-time using modern ETL architecture.
 
 ## Overview
+**The Economic Intelligence System (EIS)** monitors key economic metrics including USD/EGP exchange rates, precious metals prices, macroeconomic indicators, and stock market indices. 
+The system implements a star schema data warehouse on PostgreSQL, orchestrated by Apache Airflow with dbt for transformations and Soda Core for data quality validation,  and enables real-time monitoring through Power BI dashboards.
 
-The Economic Intelligence System (EIS) monitors and analyzes key economic indicators for Egypt's financial health.
-The pipeline tracks **USD ↔ EGP exchange rates** (daily) and **gold and silver prices** (daily, per troy ounce & per gram).
-Annual **economic indicators** include inflation, GDP growth, and unemployment rates sourced from the World Bank.
-Yearly **stock market indices** include the S&P 500 and Dow Jones for global economic context.
+## Architecture
 
-## Pipeline Architecture
-![Pipeline Architecture](docs/PipelineArchitecture.jpg) 
-## Key Features
+![Pipeline Architecture](docs/PipelineArchitecture.jpg)
 
-- ELT pipeline with star schema data warehouse design using PostgreSQL
-- Multi-source data integration (Alpha Vantage, Yahoo Finance, World Bank API)
-- dbt-powered SQL transformations with data lineage tracking
-- Automated data quality validation with Soda Core (referential integrity, calculated columns, range validation)
-- Daily orchestration via Apache Airflow with parallel extraction and retry logic
-- Advanced analytics views (correlations, moving averages, daily returns, inflation impact analysis)
-- Currency conversion (USD to EGP) and per-gram precious metals pricing (troy ounce conversion)
-- Docker containerization for easy deployment and scaling
+### Pipeline Stages
+
+### Extract 
+Python scripts fetch data from external APIs:
+- USD/EGP exchange rates (Alpha Vantage)
+- Gold & silver prices (Yahoo Finance)
+- Economic indicators (World Bank API)
+- Stock indices (Yahoo Finance)
+
+### Transform
+dbt models process data through layers:
+- **Staging**: Clean and normalize raw data
+- **Dimensional**: Date dimension table
+- **Fact**: Consolidated daily metrics with calculated fields
+- **Analytics**: Derived insights (returns, correlations, moving averages)
+
+### Load
+Transformed data stored in PostgreSQL data warehouse:
+- Star schema design for optimal query performance
+- Pre-calculated metrics (currency conversions, per-gram prices)
+
+### Report
+Power BI dashboards for business intelligence:
+- Real-time monitoring of economic indicators
+- Trend analysis and correlation insights 
 
 
 
+## Data Warehouse Schema
 
-## Airflow DAG
-
-The EIS pipeline is orchestrated using Apache Airflow and follows an ELT (Extract, Load, Transform) pattern:
-
-![EIS Pipeline DAG](docs/eis_pipeline-graph.png)
-
-## Data Warehouse ERD (Star Schema)
-
+#### The pipeline builds a **star schema** with:
+- 1 Dimension: dim_date (temporal attributes)
+- 1 Fact Table: fact_daily_metrics (15 consolidated metrics)
+- 5 Analytics Views: Returns, moving averages, correlations, inflation impact
 ```mermaid
 erDiagram
   DIM_DATE ||--o{ FACT_DAILY_METRICS : "has"
@@ -100,3 +111,34 @@ erDiagram
     numeric sp500
   }
 ```
+## Airflow DAG
+
+**The EIS pipeline is orchestrated using Apache Airflow and follows an ELT (Extract, Load, Transform) pattern:**
+
+![EIS Pipeline DAG](docs/eis_pipeline-graph.png)
+
+
+
+## Key Features
+
+- ETL pipeline with star schema data warehouse design using PostgreSQL
+- Multi-source data integration (Alpha Vantage, Yahoo Finance, World Bank API)
+- dbt-powered SQL transformations with data lineage tracking
+- Automated data quality validation with Soda Core (referential integrity, calculated columns, range validation)
+- Daily orchestration via Apache Airflow with parallel extraction and retry logic
+- Advanced analytics views (correlations, moving averages, daily returns, inflation impact analysis)
+- Currency conversion (USD to EGP) and per-gram precious metals pricing (troy ounce conversion)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
