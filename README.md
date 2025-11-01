@@ -10,7 +10,7 @@ Annual **economic indicators** include inflation, GDP growth, and unemployment r
 Yearly **stock market indices** include the S&P 500 and Dow Jones for global economic context.
 
 ## Pipeline Architecture
-
+![Pipeline Architecture](docs/PipelineArchitecture.jpg) 
 ## Key Features
 
 - ELT pipeline with star schema data warehouse design using PostgreSQL
