@@ -21,11 +21,10 @@ requirements.txt
 
 seeds/
 
-transform/datawatch/
+
 
 schema.yml
 
-README_DATAWAREHOUSE.md
 seeds
 seeds/
 seeds/exchange_rates.csv

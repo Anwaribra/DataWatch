@@ -7,6 +7,8 @@ from datetime import datetime, date, timedelta
 import time
 import yfinance as yf
 from dotenv import load_dotenv
+from sqlalchemy import create_engine
+import sqlalchemy 
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -31,12 +33,13 @@ def get_db_connection_string():
 
 def save_to_database(df):
     connection_string = get_db_connection_string()
+    engine = create_engine(connection_string)
     
     df_to_save = df.copy()
     df_to_save['date'] = pd.to_datetime(df_to_save['date']).dt.date
     
-    # Use connection string directly for pandas compatibility
-    df_to_save.to_sql('gold_silver_prices', connection_string, if_exists='replace', index=False)
+    with engine.begin() as conn:
+        df_to_save.to_sql('gold_silver_prices', conn, if_exists='replace', index=False)
     
     logger.info("data saved to database")
 

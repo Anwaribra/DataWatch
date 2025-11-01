@@ -1,3 +1,7 @@
+CREATE DATABASE eis_db;
+
+\c eis_db
+
 -- Gold and Silver Prices Table
 CREATE TABLE IF NOT EXISTS gold_silver_prices (
     id SERIAL PRIMARY KEY,
@@ -29,7 +33,4 @@ CREATE TABLE IF NOT EXISTS economic_indicators (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(date)
 );
-
-
-
 

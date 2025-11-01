@@ -5,6 +5,8 @@ import json
 import os
 from datetime import datetime
 from dotenv import load_dotenv
+from sqlalchemy import create_engine
+import sqlalchemy 
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -21,6 +23,10 @@ def get_db_connection_string():
     db_name = os.getenv('DB_NAME', 'eis_db')
     db_user = os.getenv('DB_USER', 'postgres')
     db_password = os.getenv('DB_PASSWORD')
+    
+    if not db_password:
+        logger.warning("DB_PASSWORD environment variable is not set")
+    
     connection_string = f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
     return connection_string
 
@@ -73,22 +79,42 @@ def fetch_all():
     return result
 
 def save_data(df):
-    os.makedirs('data/raw', exist_ok=True)
-    df.to_csv('data/raw/economic_indicators.csv', index=False)
-    logger.info(f"Saved {len(df)} records to CSV")
+    # Use absolute path based on current working directory
+    cwd = os.getcwd()
+    data_dir = os.path.join(cwd, 'data', 'raw')
+    os.makedirs(data_dir, exist_ok=True)
     
-    connection_string = get_db_connection_string()
-    df.to_sql('economic_indicators', connection_string, if_exists='replace', index=False)
-    logger.info("data saved to postgres")
+    csv_path = os.path.join(data_dir, 'economic_indicators.csv')
+    df.to_csv(csv_path, index=False)
+    logger.info(f"Saved {len(df)} records to CSV at {csv_path}")
+    
+    try:
+        connection_string = get_db_connection_string()
+        if not connection_string or 'None' in connection_string:
+            logger.error("Database connection string is invalid. Check environment variables.")
+            raise ValueError("Invalid database connection string")
+        
+        engine = create_engine(connection_string)
+        with engine.begin() as conn:
+            df.to_sql('economic_indicators', conn, if_exists='replace', index=False)
+        logger.info("data saved to postgres")
+    except Exception as e:
+        logger.error(f"Error saving to database: {e}")
+        raise
 
 def main():
     logger.info("fetching economic indicators")
-    df = fetch_all()
-    if df is not None and not df.empty:
-        save_data(df)
-        logger.info(f"success: {len(df)} records")
-    else:
-        logger.error("failed to fetch data")
+    try:
+        df = fetch_all()
+        if df is not None and not df.empty:
+            save_data(df)
+            logger.info(f"success: {len(df)} records")
+        else:
+            logger.error("failed to fetch data - no data returned or empty dataframe")
+            raise ValueError("No data fetched from World Bank API")
+    except Exception as e:
+        logger.error(f"Error in main execution: {e}")
+        raise
 
 if __name__ == "__main__":
     main()
