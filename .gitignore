@@ -46,3 +46,8 @@ checks_dim_date.yml.old2
 checks.yml 
 configuration.yml
 quality/README.md
+
+dbt_project.yml
+DWH_Tables_Reference.md
+PowerBI_Dashboard_Guide.md
+QualityChecks_README.md

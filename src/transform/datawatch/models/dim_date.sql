@@ -17,14 +17,12 @@ with date_range as (
 
 select 
     date,
-    -- Generate integer surrogate key in YYYYMMDD format (e.g., 20240101)
-    -- This provides better join performance and allows date dimension to outlive fact data
     to_char(date, 'YYYYMMDD')::integer as date_id,
     extract(year from date) as year,
     extract(quarter from date) as quarter,
     extract(month from date) as month,
     extract(day from date) as day,
-    extract(dow from date) as day_of_week, -- 0=Sunday, 6=Saturday
+    extract(dow from date) as day_of_week, 
     case when extract(dow from date) in (0, 6) then true else false end as is_weekend,
     extract(week from date) as week,
     to_char(date, 'Month') as month_name,
