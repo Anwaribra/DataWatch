@@ -131,7 +131,7 @@ erDiagram
 - Advanced analytics views (correlations, moving averages, daily returns, inflation impact analysis)
 - Currency conversion (USD to EGP) and per-gram precious metals pricing (troy ounce conversion)
 - Power BI dashboards for comprehensive business intelligence and real-time monitoring
-
+<!-- 
 ## Power BI Dashboards
 
 The data warehouse supports a comprehensive set of Power BI dashboards for different analytical needs:
@@ -176,4 +176,4 @@ The data warehouse supports a comprehensive set of Power BI dashboards for diffe
 
 
 
-
+ -->
