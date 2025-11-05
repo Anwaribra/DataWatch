@@ -51,3 +51,5 @@ dbt_project.yml
 DWH_Tables_Reference.md
 PowerBI_Dashboard_Guide.md
 QualityChecks_README.md
+
+PowerBI_Dashboard_QuickStart.md

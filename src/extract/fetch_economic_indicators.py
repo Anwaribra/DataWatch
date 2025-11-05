@@ -6,7 +6,6 @@ import os
 from datetime import datetime
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
-import sqlalchemy 
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -22,39 +21,23 @@ def get_db_connection_string():
     db_port = os.getenv('DB_PORT', '5432')
     db_name = os.getenv('DB_NAME', 'eis_db')
     db_user = os.getenv('DB_USER', 'postgres')
-    db_password = os.getenv('DB_PASSWORD')
-    
-    if not db_password:
-        logger.warning("DB_PASSWORD environment variable is not set")
-    
-    connection_string = f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
-    return connection_string
+    db_password = os.getenv('DB_PASSWORD','2003')
+    return f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
 
 def fetch_indicator(code, name):
-    try:
-        url = f"https://api.worldbank.org/v2/country/EG/indicator/{code}"
-        params = {"format": "json", "date": "1960:2025", "per_page": 20000}
-        response = requests.get(url, params=params, timeout=30)
-        response.raise_for_status()
-        data = response.json()
-        
-        if not data or len(data) < 2 or not data[1]:
-            return None
-        
-        records = [{'date': f"{entry['date']}-12-31", 'value': float(entry['value'])} 
-                   for entry in data[1] if entry['value'] is not None]
-        
-        if not records:
-            return None
-        
-        df = pd.DataFrame(records)
-        df = df.rename(columns={'value': name})
-        df['date'] = pd.to_datetime(df['date']).dt.date
-        logger.info(f"Fetched {len(df)} records for {name}")
-        return df
-    except Exception as e:
-        logger.error(f"Error fetching {name}: {e}")
-        return None
+    url = f"https://api.worldbank.org/v2/country/EG/indicator/{code}"
+    params = {"format": "json", "date": "1960:2025", "per_page": 20000}
+    response = requests.get(url, params=params, timeout=30)
+    response.raise_for_status()
+    data = response.json()
+    
+    records = [{'date': f"{entry['date']}-12-31", 'value': float(entry['value'])} 
+               for entry in data[1] if entry['value'] is not None]
+    
+    df = pd.DataFrame(records)
+    df = df.rename(columns={'value': name})
+    df['date'] = pd.to_datetime(df['date']).dt.date
+    return df
 
 def fetch_all():
     config = load_config()
@@ -66,55 +49,29 @@ def fetch_all():
     
     result = inflation
     for df in [gdp, unemployment]:
-        if df is not None:
-            if result is not None:
-                result = pd.merge(result, df, on='date', how='outer')
-            else:
-                result = df
+        result = pd.merge(result, df, on='date', how='outer')
     
-    if result is not None:
-        result = result.sort_values('date').reset_index(drop=True)
-        result['source'] = 'world_bank'
+    result = result.sort_values('date').reset_index(drop=True)
+    result['source'] = 'world_bank'
     
     return result
 
 def save_data(df):
-    # Use absolute path based on current working directory
     cwd = os.getcwd()
     data_dir = os.path.join(cwd, 'data', 'raw')
     os.makedirs(data_dir, exist_ok=True)
-    
     csv_path = os.path.join(data_dir, 'economic_indicators.csv')
     df.to_csv(csv_path, index=False)
-    logger.info(f"Saved {len(df)} records to CSV at {csv_path}")
     
-    try:
-        connection_string = get_db_connection_string()
-        if not connection_string or 'None' in connection_string:
-            logger.error("Database connection string is invalid. Check environment variables.")
-            raise ValueError("Invalid database connection string")
-        
-        engine = create_engine(connection_string)
-        with engine.begin() as conn:
-            df.to_sql('economic_indicators', conn, if_exists='replace', index=False)
-        logger.info("data saved to postgres")
-    except Exception as e:
-        logger.error(f"Error saving to database: {e}")
-        raise
+    engine = create_engine(get_db_connection_string())
+    with engine.begin() as conn:
+        df.to_sql('economic_indicators', conn, if_exists='replace', index=False)
+    logger.info("Data saved to postgres")
 
 def main():
-    logger.info("fetching economic indicators")
-    try:
-        df = fetch_all()
-        if df is not None and not df.empty:
-            save_data(df)
-            logger.info(f"success: {len(df)} records")
-        else:
-            logger.error("failed to fetch data - no data returned or empty dataframe")
-            raise ValueError("No data fetched from World Bank API")
-    except Exception as e:
-        logger.error(f"Error in main execution: {e}")
-        raise
+    df = fetch_all()
+    save_data(df)
+    logger.info(f"Success: {len(df)} records")
 
 if __name__ == "__main__":
     main()

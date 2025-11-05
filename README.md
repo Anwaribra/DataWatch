@@ -31,14 +31,20 @@ Transformed data stored in PostgreSQL data warehouse:
 - Star schema design for optimal query performance
 - Pre-calculated metrics (currency conversions, per-gram prices)
 
-### Report
-Power BI dashboards for business intelligence:
-- Real-time monitoring of economic indicators
-- Trend analysis and correlation insights
-- Comprehensive dashboard guide available in `docs/PowerBI_Dashboard_Guide.md`
-- Complete table reference for Power BI developers in `docs/DWH_Tables_Reference.md` 
 
 
+## Dashboard Preview
+
+The Economic Intelligence System dashboard provides a comprehensive view of key economic indicators:
+
+![EIS Dashboard](docs/eis_dashboard.png)
+
+The dashboard displays:
+- **Key Performance Indicators**: Current USD/EGP exchange rate, gold prices (USD & EGP), inflation rate, and unemployment rate
+- **Exchange Rate Analysis**: 30-day trends, monthly averages, and long-term time series (2020-2025)
+- **Gold Price Trends**: Dual-currency comparison of gold prices in USD and EGP
+- **Economic Indicators**: GDP growth and unemployment balance visualization
+- **Stock Market Trends**: S&P 500 index performance tracking
 
 ## Data Warehouse Schema
 
@@ -131,38 +137,6 @@ erDiagram
 - Advanced analytics views (correlations, moving averages, daily returns, inflation impact analysis)
 - Currency conversion (USD to EGP) and per-gram precious metals pricing (troy ounce conversion)
 - Power BI dashboards for comprehensive business intelligence and real-time monitoring
-<!-- 
-## Power BI Dashboards
-
-The data warehouse supports a comprehensive set of Power BI dashboards for different analytical needs:
-
-### Available Dashboards
-
-1. **Executive Economic Overview** - High-level KPIs for decision makers
-2. **Precious Metals Trading** - Monitor gold and silver prices across currencies
-3. **Exchange Rate Monitoring** - Track USD/EGP exchange rate movements
-4. **Economic Indicators** - Monitor macroeconomic health
-5. **Correlation Analysis** - Understand relationships between economic factors
-6. **Stock Market & Economic Relationship** - Analyze stock indices vs economic indicators
-7. **Inflation Impact** - Analyze how inflation affects asset prices
-8. **Daily Returns & Volatility** - Monitor daily price movements and volatility
-9. **Time Series Analysis** - Long-term trend analysis
-10. **Comparative Analysis** - Compare USD vs EGP pricing
-11. **Data Quality & Completeness** - Monitor data pipeline health
-12. **Mobile Executive Summary** - Quick mobile view of key metrics
-
-### Documentation
-
-- **Power BI Dashboard Guide**: Complete specifications for all 12 dashboards - see `docs/PowerBI_Dashboard_Guide.md`
-- **Data Warehouse Tables Reference**: Complete table/column reference for Power BI developers - see `docs/DWH_Tables_Reference.md`
-
-### Quick Start for Power BI
-
-1. Connect Power BI to PostgreSQL database `eis_db`
-2. Import core tables: `fact_daily_metrics` and `dim_date`
-3. Create relationship: `fact_daily_metrics[date_id]` → `dim_date[date_id]`
-4. Import analytics views as needed for specific dashboards
-5. Follow dashboard specifications in the Power BI Dashboard Guide
 
 
 
@@ -173,7 +147,3 @@ The data warehouse supports a comprehensive set of Power BI dashboards for diffe
 
 
 
-
-
-
- -->
